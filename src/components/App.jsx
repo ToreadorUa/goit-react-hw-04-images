@@ -32,7 +32,7 @@ export const App = () => {
           setError('Something went wrong...');
         });
     }
-  }, [query, page]);
+  }, [query, page, dataArr]);
 
   const onSubmit = q => {
     if (q !== query) {
