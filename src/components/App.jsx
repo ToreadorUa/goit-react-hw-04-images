@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Searchbar } from './Searchbar/Searchbar';
 import { getQuery } from 'api/getQuery';
@@ -7,72 +7,57 @@ import { Appp, Message } from './App.styled';
 import { Loader } from './Loader/Loader';
 import { Rings } from 'react-loader-spinner';
 
-export class App extends Component {
-  state = {
-    query: '',
-    totalPages: 0,
-    dataArr: [],
-    page: 1,
-    per_page: 12,
-    status: 'idle',
-    error: '',
-    onMessage: false,
-  };
-  componentDidUpdate(_, prevState) {
-    if (this.state.query !== prevState.query) {
-      this.setState({ page: 1, dataArr: [] });
-    }
-    if (
-      this.state.page !== prevState.page ||
-      this.state.query !== prevState.query
-    ) {
-      this.setState({ status: 'pending' });
-      getQuery(this.state.query, this.state.page, this.state.per_page)
+export const App = () => {
+  const [query, setQuery] = useState('');
+  const [totalPages, setTotalPages] = useState(0);
+  const [dataArr, setDataArr] = useState([]);
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState('idle');
+  const [error, setError] = useState();
+  const [onMessage, setOnMessage] = useState(false);
+  const perPage = 12;
+
+  useEffect(() => {
+    if (query.length) {
+      getQuery(query, page, perPage)
         .then(data => {
-          this.setState(prev => ({
-            totalPages: Math.ceil(data.total / this.state.per_page),
-            dataArr: [...prev.dataArr, ...data.hits],
-            status: 'resolved',
-            onMessage: !data.hits.length ? true : false,
-          }));
+          setTotalPages(Math.ceil(data.total / perPage));
+          setDataArr([...dataArr, ...data.hits]);
+          setStatus('resolved');
+          setOnMessage(!data.hits.length ? true : false);
+          console.log(data);
         })
         .catch(err => {
-          this.setState({
-            status: 'rejected',
-            error: 'Something went wrong...',
-          });
-          console.log(err);
+          setStatus('rejected');
+          setError('Something went wrong...');
         });
     }
-  }
-  onSubmit = q => {
-    this.setState({ query: q });
-  };
-  btnLoadMoreClick = () => {
-    const { page } = this.state;
-    this.setState({ page: page + 1 });
-  };
+  }, [query, page]);
 
-  render() {
-    const { totalPages, page, dataArr } = this.state;
-    const btnLoadMoreShow = (totalPages > 1) & (page !== totalPages);
-    return (
-      <Appp>
-        {this.state.onMessage && (
-          <Message>There is found nothing, try again!</Message>
-        )}
-        {this.state.status === 'pending' && (
-          <Loader>
-            <Rings />
-          </Loader>
-        )}
-        <Searchbar onSubmit={this.onSubmit} />
-        <ImageGallery dataArr={dataArr} />
-        {btnLoadMoreShow ? (
-          <Button btnLoadMoreClick={this.btnLoadMoreClick} />
-        ) : null}
-        {this.state.status === 'rejected' && <h1>{this.state.error}</h1>}
-      </Appp>
-    );
-  }
-}
+  const onSubmit = q => {
+    if (q !== query) {
+      setQuery(q);
+      setDataArr([]);
+      setPage(1);
+    }
+  };
+  const btnLoadMoreClick = () => {
+    setPage(page + 1);
+  };
+  const btnLoadMoreShow = (totalPages > 1) & (page !== totalPages);
+
+  return (
+    <Appp>
+      {onMessage && <Message>There is found nothing, try again!</Message>}
+      {status === 'pending' && (
+        <Loader>
+          <Rings />
+        </Loader>
+      )}
+      <Searchbar onSubmit={onSubmit} />
+      <ImageGallery dataArr={dataArr} />
+      {btnLoadMoreShow ? <Button btnLoadMoreClick={btnLoadMoreClick} /> : null}
+      {status === 'rejected' && <h1>{error}</h1>}
+    </Appp>
+  );
+};

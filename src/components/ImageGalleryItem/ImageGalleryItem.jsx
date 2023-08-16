@@ -1,44 +1,38 @@
 import { Modal } from 'components/Modal/Modal';
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import css from './ImageGalleryItem.module.css';
 
-export class ImageGalleryItem extends Component {
-  state = {
-    isModalOpen: false,
+export const ImageGalleryItem = ({ webformatURL, largeImageURL }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener('keydown', onClickEsc);
+    return () => {
+      window.removeEventListener('keydown', onClickEsc);
+    };
+  }, []);
+
+  const openModal = () => {
+    setIsModalOpen(!isModalOpen);
   };
-  componentDidMount() {
-    window.addEventListener('keydown', this.onClickEsc);
-  }
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.onClickEsc);
-  }
-  openModal = () => {
-    this.setState(prev => ({
-      isModalOpen: !prev.isModalOpen,
-    }));
-  };
-  onClickEsc = e => {
+  const onClickEsc = e => {
     if (e.code === 'Escape') {
-      this.setState({ isModalOpen: false });
+      setIsModalOpen(false);
     }
   };
-  render() {
-    return (
-      <>
-        <li className={css.ImageGalleryItem} onClick={this.openModal}>
-          <img
-            className={css.ImageGalleryItemImage}
-            src={this.props.webformatURL}
-            alt={this.props.id}
-          />
-        </li>
-        {this.state.isModalOpen && (
-          <Modal
-            largeImageURL={this.props.largeImageURL}
-            closeModal={this.openModal}
-          />
-        )}
-      </>
-    );
-  }
-}
+
+  return (
+    <>
+      <li className={css.ImageGalleryItem} onClick={openModal}>
+        <img
+          className={css.ImageGalleryItemImage}
+          src={webformatURL}
+          alt={'img'}
+        />
+      </li>
+      {isModalOpen && (
+        <Modal largeImageURL={largeImageURL} closeModal={openModal} />
+      )}
+    </>
+  );
+};
