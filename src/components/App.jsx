@@ -22,7 +22,7 @@ export const App = () => {
       getQuery(query, page, perPage)
         .then(data => {
           setTotalPages(Math.ceil(data.total / perPage));
-          setDataArr([...dataArr, ...data.hits]);
+          setDataArr(prevDataArr => [...prevDataArr, ...data.hits]);
           setStatus('resolved');
           setOnMessage(!data.hits.length ? true : false);
           console.log(data);
@@ -32,7 +32,7 @@ export const App = () => {
           setError('Something went wrong...');
         });
     }
-  }, [query, page, dataArr]);
+  }, [query, page]);
 
   const onSubmit = q => {
     if (q !== query) {
